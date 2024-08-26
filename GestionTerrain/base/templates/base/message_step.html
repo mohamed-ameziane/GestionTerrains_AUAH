@@ -1,0 +1,27 @@
+{% extends 'main.html' %}
+
+{% block title %}
+    <title>Message | AUAH </title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <!-- Inclure la barre latérale -->
+    {% include 'side-bar.html' %}
+    <div class="main">
+        <!-- Titre du formulaire -->
+        <h1>Formulaire de Message</h1>
+        <hr>
+        <div class="form-container">
+            <!-- Début du formulaire avec méthode POST et prise en charge des fichiers -->
+            <form method="post" enctype="multipart/form-data" style="max-width: 800px; margin: 30px auto;">
+                {% csrf_token %}
+                <!-- Rendu du formulaire 'message_form' sous forme de paragraphes -->
+                {{ message_form.as_p }}
+                <!-- Bouton pour soumettre le formulaire -->
+                <button type="submit" class="submit-button">Suivant</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

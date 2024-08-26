@@ -1,0 +1,56 @@
+{% extends 'main.html' %}
+
+{% block title %}
+    <title>Participants & Commission | AUAH </title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <!-- La barre latérale -->
+    {% include 'side-bar.html' %}
+    
+    <div class="main">
+        <h2>Liste des Participants</h2>
+        
+        <!-- Formulaire de recherche des participants -->
+        <form method="post" class="search-form" style="max-width: 800px; margin: 30px auto;">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary">Rechercher</button>
+        </form>
+        
+        <!-- Vérification si des participants sont disponibles -->
+        {% if participants %}
+        <table class="participants-table" style="margin: 25px 0px;">
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Prénom</th>
+                    <th>Role</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Boucle pour afficher chaque participant -->
+                {% for participant in participants %}
+                    <tr>
+                        <td>{{ participant.nom }}</td>
+                        <td>{{ participant.prenom }}</td>
+                        <td>{{ participant.role }}</td>
+                    </tr>
+                {% empty %}
+                    <!-- Message affiché lorsqu'aucun participant n'est trouvé -->
+                    <tr>
+                        <td colspan="3">Pas de participants trouvés.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+        
+        <!-- Lien pour ajouter des participants -->
+        <div class="links">
+            <a href="{% url 'create_commission' %}" class="btn btn-secondary">Ajouter des Participants</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

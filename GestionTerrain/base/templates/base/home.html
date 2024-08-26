@@ -1,0 +1,231 @@
+{% extends 'main.html' %}
+
+{% block title %} <title>Acceuil | AUAH</title> {% endblock %}
+
+
+{% block content %}
+<div class="main-content">
+    <!-- Inclure la barre latérale -->
+    {% include 'side-bar.html' %}
+    <main>
+        <div class="charts">
+            <div class="grid first-row">
+                <!-- Conteneur du premier graphique (Doughnut) -->
+                <div class="grid-item chartContainer">
+                    <canvas id="communeDoughnutChart" style="margin-bottom: 0;"></canvas>
+                </div>
+                <!-- Conteneur du deuxième graphique (Bar Chart) -->
+                <div class="grid-item chartContainer">
+                    <canvas id="ChartCanva" style="margin-bottom: 0;"></canvas>
+                </div>
+            </div>
+            <div class="grid second-row">
+                <!-- Conteneur du troisième graphique (Horizontal Bar Chart) -->
+                <div class="grid-item chartContainer">
+                    <canvas id="myHorizontalBarChart" style="margin-bottom: 0;"></canvas>
+                </div>
+                <!-- Conteneur du quatrième graphique (Pie Chart) -->
+                <div class="grid-item chartContainer">
+                    <canvas id="myPieChart" style="margin-bottom: 0;"></canvas>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Fonction pour interpoler deux couleurs
+        function interpolateColors(color1, color2, factor) {
+            let result = color1.slice(1).match(/.{2}/g)
+                .map((hex, i) => {
+                    return Math.round(
+                        parseInt(hex, 16) * (1 - factor) +
+                        parseInt(color2.slice(1).match(/.{2}/g)[i], 16) * factor
+                    );
+                });
+            return `rgb(${result[0]}, ${result[1]}, ${result[2]})`;
+        }
+
+        // Fonction pour générer une palette de couleurs entre deux couleurs données
+        function generatePalette(startColor, endColor, steps) {
+            let colors = [];
+            for (let i = 0; i < steps; i++) {
+                let factor = i / (steps - 1);
+                colors.push(interpolateColors(startColor, endColor, factor));
+            }
+            return colors;
+        }
+
+        // Configuration du graphique Doughnut pour la répartition par type de commune
+        const ctxCommuneDoughnut = document.getElementById('communeDoughnutChart').getContext('2d');
+        const communeData = {
+            labels: ['Rurales', 'Urbaines'],
+            datasets: [{
+                data: [31, 5],
+                backgroundColor: [
+                    'rgba(141, 177, 213, 0.6)',
+                    'rgba(251, 182, 95, 0.6)',
+                ],
+                hoverOffset: 10
+            }]
+        };
+
+        const communeDoughnutConfig = {
+            type: 'doughnut',
+            data: communeData,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Répartition des Terrains par Type de Commune',
+                        font: {
+                            size: 24
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                let label = communeData.labels[tooltipItem.dataIndex];
+                                let value = communeData.datasets[0].data[tooltipItem.dataIndex];
+                                return `${label}: ${value}`;
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        const communeDoughnutChart = new Chart(ctxCommuneDoughnut, communeDoughnutConfig);
+
+        // Configuration du graphique en barres pour le nombre de terrains par secteur
+        const ctxBar = document.getElementById('ChartCanva').getContext('2d');
+        const secteurs = {{ secteurs|safe }};
+        const counts = {{ counts|safe }};
+
+        const colorsBar = generatePalette('#FBB65F', '#8DB1D5', secteurs.length);
+
+        const barData = {
+            labels: secteurs,
+            datasets: [{
+                label: 'Nombre de Terrains par Secteur',
+                data: counts,
+                backgroundColor: colorsBar.map(color => color.replace('rgb', 'rgba').replace(')', ', 0.6)')),
+                borderColor: colorsBar,
+                borderWidth: 2
+            }]
+        };
+
+        const barConfig = {
+            type: 'bar',
+            data: barData,
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Nombre de Terrains par Secteur',
+                        font: {
+                            size: 24
+                        }
+                    },
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            },
+        };
+
+        const myChart = new Chart(ctxBar, barConfig);
+
+        // Configuration du graphique en barres horizontales pour la répartition par plage de surface
+        const ctxHorizontalBar = document.getElementById('myHorizontalBarChart').getContext('2d');
+        const surfaceLabels = {{ surface_labels|safe }};
+        const surfaceCounts = {{ surface_counts|safe }};
+
+        const colorsHorizontalBar = generatePalette('#8DB1D5', '#FBB65F', surfaceLabels.length);
+
+        const horizontalBarData = {
+            labels: surfaceLabels,
+            datasets: [{
+                label: 'Nombre de Terrains par Plage de Surface',
+                data: surfaceCounts,
+                backgroundColor: colorsHorizontalBar.map(color => color.replace('rgb', 'rgba').replace(')', ', 0.6)')),
+                borderColor: colorsHorizontalBar,
+                borderWidth: 1
+            }]
+        };
+
+        const horizontalBarConfig = {
+            type: 'bar',
+            data: horizontalBarData,
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Nombre de Terrains par Plage de Surface',
+                        font: {
+                            size: 24
+                        }
+                    },
+                },
+                indexAxis: 'y',
+                scales: {
+                    x: {
+                        beginAtZero: true
+                    }
+                }
+            },
+        };
+
+        const myHorizontalBarChart = new Chart(ctxHorizontalBar, horizontalBarConfig);
+
+        // Configuration du graphique en camembert pour la répartition par référence foncière
+        const ctxPie = document.getElementById('myPieChart').getContext('2d');
+        const refFonciereLabels = {{ ref_labels|safe }};
+        const refFonciereCounts = {{ ref_counts|safe }};
+
+        const pieData = {
+            labels: refFonciereLabels,
+            datasets: [{
+                label: 'Nombre de Terrains par refFonciere',
+                data: refFonciereCounts,
+                backgroundColor: [
+                    'rgba(251, 182, 95, 0.6)',
+                    'rgba(141, 177, 213, 0.6)',
+                ],
+                hoverOffset: 10
+            }]
+        };
+
+        const pieConfig = {
+            type: 'pie',
+            data: pieData,
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Répartition des Terrains par Référence Foncière',
+                        font: {
+                            size: 24
+                        }
+                    },
+                },
+            }
+        };
+
+        const myPieChart = new Chart(ctxPie, pieConfig);
+    });
+</script>
+
+<!-- Inclusion de la bibliothèque Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}

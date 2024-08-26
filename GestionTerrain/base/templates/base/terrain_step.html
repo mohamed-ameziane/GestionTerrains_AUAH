@@ -1,0 +1,131 @@
+{% extends 'main.html' %}
+
+{% block title %}
+    <title>Choix Terrain | AUAH</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <!-- La barre latérale -->
+    {% include 'side-bar.html' %}
+    <div class="main">
+        <h1>Formulaire de Choix Terrain</h1>
+        <hr style="margin-bottom: 30px;">
+        <div class="form-container" style="max-width: 100%;">
+            <!-- Début du formulaire avec méthode POST et prise en charge des fichiers -->
+            <form id="terrain-form" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <p>Situation Géographique :</p>
+                
+                <!-- Div pour la carte Leaflet -->
+                <div id="map" style="height: 600px;"></div>
+                
+                <!-- Champs cachés pour dans les stocker les coordonnées et la surface -->
+                <input type="hidden" name="coordinates" id="coordinates">
+                <input type="hidden" name="area" id="area">
+                
+                <!-- Rendu du formulaire 'choix_terrain_form' sous forme de paragraphes -->
+                {{ choix_terrain_form.as_p }}
+                
+                <button type="submit">Enregistrer</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Liens vers les fichiers CSS et scripts JavaScript nécessaires pour Leaflet et ses plugins -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/esri-leaflet/dist/esri-leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
+<script src="https://rawgit.com/mapbox/leaflet-image/gh-pages/leaflet-image.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.7.5/proj4.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-geometryutil/0.9.3/leaflet.geometryutil.min.js"></script>
+
+<script>
+    // Initialisation de la carte avec les coordonnées et le niveau de zoom
+    var map = L.map('map').setView([35.223681, -3.979353], 12);
+    
+    // Couches de base pour la carte
+    var topographic = L.esri.basemapLayer('Topographic');
+    var streets = L.esri.basemapLayer('DarkGray');
+    var googleSatellite = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
+    });
+
+    // Ajout de la couche topographique à la carte par défaut
+    topographic.addTo(map);
+
+    // Groupement des couches de base dans un contrôleur de couches
+    var baseMaps = {
+        "Terrain": topographic,
+        "Satellite": googleSatellite,
+        "Gris Foncé": streets
+    };
+
+    // Ajout du contrôleur de couches à la carte
+    L.control.layers(baseMaps).addTo(map);
+
+    // Création d'un groupe pour les objets dessinés
+    var drawnItems = new L.FeatureGroup();
+    map.addLayer(drawnItems);
+
+    // Configuration de la barre d'outils de dessin
+    var drawControl = new L.Control.Draw({
+        edit: {
+            featureGroup: drawnItems
+        },
+        draw: {
+            marker: false,
+            polyline: false,
+            rectangle: false,
+            circle: false,
+            circlemarker: false,
+            polygon: {
+                allowIntersection: false, // Empêcher l'intersection des polygones
+                showArea: true, // Afficher la surface du polygone
+                drawError: {
+                    color: '#e1e100', // Couleur d'erreur
+                    message: '<strong>Oh non!<strong> Vous ne pouvez pas dessiner ça!'
+                },
+                shapeOptions: {
+                    color: '#ff5733' // Couleur du polygone
+                }
+            }
+        }
+    });
+    map.addControl(drawControl);
+
+    // Événement déclenché lors de la création d'un polygone
+    map.on(L.Draw.Event.CREATED, function(event) {
+        var layer = event.layer;
+        drawnItems.clearLayers(); // Supprimer les anciens polygones
+        drawnItems.addLayer(layer); // Ajouter le nouveau polygone
+
+        // Obtenir les coordonnées du polygone
+        var coordinates = layer.getLatLngs()[0].map(function(latlng) {
+            return [latlng.lat, latlng.lng];
+        });
+
+        // Convertir les coordonnées en système de projection Merchich North
+        var merchichNorth = "+proj=lcc +lat_1=33.3 +lat_0=33.3 +lon_0=-5.4 +k_0=0.999625769 +x_0=500000 +y_0=300000 +a=6378249.2 +b=6356515 +towgs84=31,146,47,0,0,0,0 +units=m +no_defs";
+        var merchichCoordinates = coordinates.map(function(latlng) {
+            return proj4(merchichNorth, [latlng[1], latlng[0]]);
+        });
+
+        // Enregistrer les coordonnées projetées dans le champ caché
+        document.getElementById('coordinates').value = JSON.stringify(merchichCoordinates);
+
+        // Obtenir directement la surface du polygone à partir de Leaflet
+        var area = L.GeometryUtil.geodesicArea(layer.getLatLngs()[0]);
+        console.log(area);
+
+        // Enregistrer la surface dans le champ caché
+        document.getElementById('area').value = area;
+    });
+</script>
+{% endblock %}

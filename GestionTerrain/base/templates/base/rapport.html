@@ -1,0 +1,298 @@
+{% extends 'main.html' %}
+
+{% block title %}
+    <title>Terrains & Rapports | AUAH</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    {% include 'side-bar.html' %}
+
+    <div class="main">
+        <h1>Page de Rapport</h1>
+        
+        <!-- Formulaire de filtrage -->
+        <div class="filter-search-container">
+            <form method="GET" action="{% url 'rapport' %}" class="filter-search-form">
+                <div class="filter-options">
+                    <!-- Options de filtrage -->
+                    <label>
+                        <input type="checkbox" name="filter" value="choixID" {% if 'choixID' in request.GET.filter %}checked{% endif %} class="filter-checkbox">
+                        ID Terrain
+                    </label>
+                    <label>
+                        <input type="checkbox" name="filter" value="secteur" {% if 'secteur' in request.GET.filter %}checked{% endif %} class="filter-checkbox">
+                        Secteur
+                    </label>
+                    <label>
+                        <input type="checkbox" name="filter" value="surface" {% if 'surface' in request.GET.filter %}checked{% endif %} class="filter-checkbox">
+                        Surface
+                    </label>
+                    <label>
+                        <input type="checkbox" name="filter" value="dateChoix" {% if 'dateChoix' in request.GET.filter %}checked{% endif %} class="filter-checkbox">
+                        Date Choix
+                    </label>
+                    <label>
+                        <input type="checkbox" name="filter" value="refMessage" {% if 'refMessage' in request.GET.filter %}checked{% endif %} class="filter-checkbox">
+                        Référence Message
+                    </label>
+                    <label>
+                        <input type="checkbox" name="filter" value="objet" {% if 'objet' in request.GET.filter %}checked{% endif %} class="filter-checkbox">
+                        Objet
+                    </label>
+                    <label>
+                        <input type="checkbox" name="filter" value="commune" {% if 'commune' in request.GET.filter %}checked{% endif %} class="filter-checkbox">
+                        Commune
+                    </label>
+                    <label>
+                        <input type="checkbox" name="filter" value="province" {% if 'province' in request.GET.filter %}checked{% endif %} class="filter-checkbox">
+                        Province
+                    </label>
+                    <label>
+                        <input type="checkbox" name="filter" value="refFonciere"{% if 'refFonciere' in request.GET.filter %}checked{% endif %} class="filter-checkbox">
+                        Référence foncière
+                    </label>
+                    
+                    <!-- Champs de recherche dynamiques en fonction des filtres sélectionnés -->
+                    <div id="search-fields" class="search-fields">
+                        <div id="search-choixID" class="search-field" style="display: none;">
+                            <label>ID Terrain:
+                                <input type="text" name="search_choixID" placeholder="Recherche ID Terrain..." value="{{ request.GET.search_choixID }}">
+                            </label>
+                        </div>
+                        <div id="search-secteur" class="search-field" style="display: none;">
+                            <label>Secteur:
+                                <input type="text" name="search_secteur" placeholder="Recherche Secteur..." value="{{ request.GET.search_secteur }}">
+                            </label>
+                        </div>
+                        <div id="search-surface" class="search-field" style="display: none;">
+                            <label>Surface Min:
+                                <input type="number" name="min_surface" placeholder="Surface Min" value="{{ request.GET.min_surface }}">
+                            </label>
+                            <label>Surface Max:
+                                <input type="number" name="max_surface" placeholder="Surface Max" value="{{ request.GET.max_surface }}">
+                            </label>
+                        </div>
+                        <div id="search-dateChoix" class="search-field" style="display: none;">
+                            <label>Date de Début:
+                                <input type="date" name="start_date" value="{{ request.GET.start_date }}">
+                            </label>
+                            <label>Date de Fin:
+                                <input type="date" name="end_date" value="{{ request.GET.end_date }}">
+                            </label>
+                        </div>
+                        <div id="search-refMessage" class="search-field" style="display: none;">
+                            <label>Référence Message:
+                                <input type="text" name="search_refMessage" placeholder="Recherche Référence Message..." value="{{ request.GET.search_refMessage }}">
+                            </label>
+                        </div>
+                        <div id="search-objet" class="search-field" style="display: none;">
+                            <label>Objet:
+                                <input type="text" name="search_objet" placeholder="Recherche Objet..." value="{{ request.GET.search_objet }}">
+                            </label>
+                        </div>
+                        <div id="search-commune" class="search-field" style="display: none;">
+                            <label>Commune:
+                                <input type="text" name="search_commune" placeholder="Recherche Commune..." value="{{ request.GET.search_commune }}">
+                            </label>
+                        </div>
+                        <div id="search-province" class="search-field" style="display: none;">
+                            <label>Province:
+                                <input type="text" name="search_province" placeholder="Recherche Province..." value="{{ request.GET.search_province }}">
+                            </label>
+                        </div>
+                        <div id="search-refFonciere" class="search-field" style="display: none;">
+                            <label>Référence foncière:
+                                <input type="text" name="search_refFonciere" placeholder="Recherche Référence foncière..." value="{{ request.GET.search_refFonciere }}">
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="apply-button">Appliquer</button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Tableau affichant les terrains -->
+        <div class="table-container">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID Terrain</th>
+                            <th>Situation Géographique</th>
+                            <th>Secteur</th>
+                            <th>Surface</th>
+                            <th>Date Choix</th>
+                            <th>Référence Message</th>
+                            <th>Date Message</th>
+                            <th>Objet</th>
+                            <th>Commune</th>
+                            <th>Province</th>
+                            <th>Référence foncière</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for choix in choix_terrains %}
+                            <tr>
+                                <td>{{ choix.choixID }}</td>
+                                <td>
+                                    <!-- Bouton pour afficher la carte avec le polygone correspondant -->
+                                    <button style="background-color: #8db1d5; font-weight: normal; border-radius: 4px;" onclick="showMapPolygon('{{ choix.geo }}')">Afficher Map</button>
+                                </td>
+                                <td>{{ choix.secteur }}</td>
+                                <td>{{ choix.surface }}</td>
+                                <td>{{ choix.dateChoix }}</td>
+                                <td>{{ choix.refMessage.refMessage }}</td>
+                                <td>{{ choix.refMessage.dateMessage }}</td>
+                                <td>{{ choix.refMessage.objet }}</td>
+                                <td>{{ choix.commune }}</td>
+                                <td>{{ choix.province }}</td>
+                                <td>{{ choix.refFonciere }}</td>
+                                <td>
+                                    <!-- Formulaires pour générer, modifier ou supprimer un rapport -->
+                                    <form method="POST" action="{% url 'generate_rapport' choix.choixID %}" style="display:inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-primary" style="margin-bottom: 5px;">Générer un rapport</button>
+                                    </form>                                             
+                                    <form method="POST" action="{% url 'delete' choix.choixID  %}" style="display:inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr?');">Supprimer</button>
+                                    </form>                        
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="13">Aucun terrain disponible.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <!-- Conteneur pour la carte -->
+                <div id="map-container" style="width: 100%; height: 600px; display: none;"></div>
+                <button id="hide-map-button" style="margin: 5px 0 5px; background-color: #4254668d; font-weight: normal; border-radius: 4px; display: none;">Cacher</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/esri-leaflet/dist/esri-leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.7.5/proj4.js"></script>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkboxes = document.querySelectorAll('.filter-checkbox');
+        const searchFields = {
+            'choixID': document.getElementById('search-choixID'),
+            'secteur': document.getElementById('search-secteur'),
+            'surface': document.getElementById('search-surface'),
+            'dateChoix': document.getElementById('search-dateChoix'),
+            'refMessage': document.getElementById('search-refMessage'),
+            'objet': document.getElementById('search-objet'),
+            'commune': document.getElementById('search-commune'),
+            'province': document.getElementById('search-province'),
+            'refFonciere': document.getElementById('search-refFonciere'),
+        };
+
+        // Met à jour la visibilité des champs de recherche en fonction des filtres sélectionnés
+        function updateSearchFieldsVisibility() {
+            Object.keys(searchFields).forEach(filter => {
+                if (document.querySelector(`input[name="filter"][value="${filter}"]`).checked) {
+                    searchFields[filter].style.display = 'block';
+                } else {
+                    searchFields[filter].style.display = 'none';
+                }
+            });
+        }
+
+        updateSearchFieldsVisibility();
+
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateSearchFieldsVisibility);
+        });
+    });
+
+    var merchichNorth = "+proj=lcc +lat_1=33.3 +lat_0=33.3 +lon_0=-5.4 +k_0=0.999625769 +x_0=500000 +y_0=300000 +a=6378249.2 +b=6356515 +towgs84=31,146,47,0,0,0,0 +units=m +no_defs";
+    var wgs84 = "EPSG:4326";  // Système de coordonnées WGS84 (GPS)
+
+    // Fonction pour afficher le polygone sur la carte
+    function showMapPolygon(coordinatesStr) {
+        var mapContainer = document.getElementById('map-container');
+        mapContainer.style.display = 'block';
+        document.getElementById('hide-map-button').style.display = 'block';
+        document.getElementById('hide-map-button').scrollIntoView({behavior: 'smooth'});
+
+        // Initialisation de la carte si ce n'est pas déjà fait
+        if (!window.map) {
+            window.map = L.map('map-container').setView([35.223681, -3.979353], 14);
+
+            var topographic = L.esri.basemapLayer('Topographic', {
+                maxZoom: 18
+            });
+            var Satellite = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+                maxZoom: 20,
+                subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
+            });
+
+            Satellite.addTo(window.map);
+
+            var baseMaps = {
+                "Terrain": topographic,
+                "Satellite": Satellite,
+            };
+
+            L.control.layers(baseMaps).addTo(window.map);
+
+            window.drawnItems = L.featureGroup().addTo(window.map);
+        }
+
+        try {
+            // Nettoyage de la chaîne de coordonnées et parsing
+            var cleanedStr = coordinatesStr.replace(/^"|"$/g, '');
+
+            var merchichCoordinates = JSON.parse(cleanedStr);
+
+            // Conversion des coordonnées Merchich en coordonnées GPS
+            var gpsCoordinates = merchichCoordinates.map(function(coord) {
+                var gpsCoord = proj4(merchichNorth, wgs84, [coord[0], coord[1]]);
+                return [gpsCoord[1], gpsCoord[0]];
+            });
+
+            if (!Array.isArray(gpsCoordinates) || !Array.isArray(gpsCoordinates[0])) {
+                throw new Error('Les coordonnées ne sont pas au format attendu');
+            }
+
+            // Nettoyage des couches précédentes et ajout du nouveau polygone
+            window.drawnItems.clearLayers();
+
+            var polygon = L.polygon(gpsCoordinates, {
+                color: '#80ed90',
+                fillOpacity: 0.5,
+                weight: 4
+            }).addTo(window.drawnItems);
+
+            // Ajustement de la vue de la carte pour inclure le polygone
+            window.map.fitBounds(polygon.getBounds());
+
+        } catch (e) {
+            console.error('Erreur lors de l\'analyse des coordonnées :', e);
+            alert('Échec de l\'affichage de la carte.');
+        }
+    }
+
+    // Fonction pour cacher la carte
+    document.getElementById('hide-map-button').addEventListener('click', function() {
+        var mapContainer = document.getElementById('map-container');
+        window.scrollTo({top:0, behavior: 'smooth'});
+        mapContainer.style.display = 'none';
+        document.getElementById('hide-map-button').style.display = 'none';
+    });
+</script>
+
+{% endblock %}

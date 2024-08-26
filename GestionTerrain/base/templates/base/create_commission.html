@@ -1,0 +1,28 @@
+{% extends 'main.html' %}
+
+{% block title %}
+    <title>Commissions | AUAH </title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <!-- La barre latérale -->
+    {% include 'side-bar.html' %}
+    
+    <div class="main">
+        <h2>Ajout d'une Commission</h2>
+        
+        <!-- Formulaire pour ajouter un participant à la commission -->
+        <form method="post" class="create-commission-form" style="max-width: 800px; margin: 30px auto;">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary">Ajouter le Participant</button>
+        </form>
+        
+        <!-- Liens pour accéder à la liste des participants -->
+        <div class="links" style="margin: 30px 0px;">
+            <a href="{% url 'list_participants' %}" class="btn btn-secondary">Liste des Participants</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
