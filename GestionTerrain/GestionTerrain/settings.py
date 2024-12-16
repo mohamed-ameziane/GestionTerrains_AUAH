@@ -13,7 +13,7 @@ SECRET_KEY = 'django-insecure-y_ywec6mxiaizwya+5)-31ub@pek=quetb(o%6c%(e*!fji*9(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['gestionterrains-auah.onrender.com', 'localhost']
 
 
 # Application definition
